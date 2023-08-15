@@ -146,10 +146,8 @@ func (t *Telegram) SendPhotoGet(imgUrl string, chatId string) error {
 }
 
 func (t *Telegram) SendPhoto(imgUrl string, chatId string) error {
-	fmt.Println("SendPhoto - 1")
 	params := url.Values{}
 	params.Add("chat_id", chatId)
-	fmt.Println("SendPhoto - 2")
 	urlMsg := t.serviceUrl + "/sendPhoto?" + params.Encode()
 
 	fmt.Println("sendPhotoUrl", urlMsg)
@@ -160,11 +158,9 @@ func (t *Telegram) SendPhoto(imgUrl string, chatId string) error {
 		return err
 	}
 	defer imgFile.Body.Close()
-	fmt.Println("SendPhoto - 3")
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
-	fmt.Println("SendPhoto - 4")
 	// New multipart writer.
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -173,14 +169,12 @@ func (t *Telegram) SendPhoto(imgUrl string, chatId string) error {
 		fmt.Printf("Error creating form field: %v\n", err)
 		return err
 	}
-	fmt.Println("SendPhoto - 5")
 
 	_, err = io.Copy(fw, imgFile.Body)
 	if err != nil {
 		fmt.Printf("Error copying file: %v\n", err)
 		return err
 	}
-	fmt.Println("SendPhoto - 6")
 
 	// Close multipart writer.
 	writer.Close()
@@ -189,14 +183,12 @@ func (t *Telegram) SendPhoto(imgUrl string, chatId string) error {
 		fmt.Printf("Error creating request: %v\n", err)
 		return err
 	}
-	fmt.Println("SendPhoto - 7")
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rsp, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("Error sending image: %v\n", err)
 	}
-	fmt.Println("SendPhoto - 8")
 
 	fmt.Printf("SendPhoto Response: %s\n", utils.SPrintJson(rsp))
 	if rsp.StatusCode != http.StatusOK {

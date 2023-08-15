@@ -14,9 +14,13 @@ require (
 
 require (
 	github.com/gofrs/flock v0.7.1 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pulumi/pulumi/sdk v1.13.1 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
+	go.uber.org/mock v0.2.0 // indirect
+	golang.org/x/mod v0.6.0 // indirect
+	golang.org/x/tools v0.2.0 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
