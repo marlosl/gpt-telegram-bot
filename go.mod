@@ -6,24 +6,18 @@ require (
 	github.com/aws/aws-lambda-go v1.38.0
 	github.com/aws/aws-sdk-go v1.44.219
 	github.com/go-resty/resty/v2 v2.7.0
+	github.com/golang/mock v1.6.0
 	github.com/pulumi/pulumi-aws/sdk/v5 v5.30.1
 	github.com/pulumi/pulumi/sdk/v3 v3.57.1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
+	github.com/stretchr/testify v1.8.1
+	go.uber.org/mock v0.2.0
 )
 
 require (
-	github.com/gofrs/flock v0.7.1 // indirect
-	github.com/golang/mock v1.6.0 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/pulumi/pulumi/sdk v1.13.1 // indirect
-	github.com/src-d/gcfg v1.4.0 // indirect
-	go.uber.org/mock v0.2.0 // indirect
-	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/tools v0.2.0 // indirect
-	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
-	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 )
 
 require (
@@ -66,7 +60,6 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/term v1.1.0 // indirect
-	github.com/pulumi/pulumi-aws/sdk v1.31.0
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect

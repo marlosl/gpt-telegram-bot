@@ -5,8 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/golang/mock/gomock"
+	dbm "github.com/marlosl/gpt-telegram-bot/mocks/mock_dynamodbiface"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func TestCacheRepository(t *testing.T) {
@@ -14,7 +15,7 @@ func TestCacheRepository(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	// Create a mock for the DynamoDB API
-	mockDynamoDB := NewMockDynamoDBAPI(mockCtrl)
+	mockDynamoDB := dbm.NewMockDynamoDBAPI(mockCtrl)
 
 	// Create a CacheRepository instance with the mock
 	repo := &CacheRepository{
