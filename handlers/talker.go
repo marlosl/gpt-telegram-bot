@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"fmt"
-	"gpt-talk/utils"
 	"net/http"
+
+	"github.com/marlosl/gpt-telegram-bot/utils"
 
 	"github.com/aws/aws-lambda-go/events"
 )

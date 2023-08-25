@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/marlosl/gpt-telegram-bot/config"
+	"github.com/marlosl/gpt-telegram-bot/clients/sqs"
 	"github.com/marlosl/gpt-telegram-bot/consts"
 	"github.com/marlosl/gpt-telegram-bot/services/chatgpt"
-	"github.com/marlosl/gpt-telegram-bot/services/sqs"
 	"github.com/marlosl/gpt-telegram-bot/services/telegram"
+	"github.com/marlosl/gpt-telegram-bot/utils/config"
 
 	"github.com/aws/aws-lambda-go/events"
 )

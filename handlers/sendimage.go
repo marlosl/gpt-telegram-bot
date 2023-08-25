@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/marlosl/gpt-telegram-bot//utils/config"
 	"github.com/marlosl/gpt-telegram-bot/services/telegram"
 	"github.com/marlosl/gpt-telegram-bot/utils"
+	"github.com/marlosl/gpt-telegram-bot/utils/config"
 
 	"github.com/aws/aws-lambda-go/events"
 )
