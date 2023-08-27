@@ -22,45 +22,71 @@ const (
 	Image MessageType = 2
 )
 
+type TelegramInterface interface {
+	SendMessage(message string, chatId string, isHtml bool)
+	SendRepliedMessage(message string, reply string)
+	SendTelegramMessage(message string, paramValues url.Values)
+	SendTelegramCallbackQueryResponse(callbackQueryId string)
+	SetWebhook(webhookUrl string, token string)
+	SendPhotoGet(imgUrl string, chatId string) error
+	SendPhoto(imgUrl string, chatId string) error
+	GetCache() db.CacheRepositoryInterface
+}
+
 type Telegram struct {
-	Type       MessageType
-	serviceUrl string
-	Cache      *db.CacheRepository
+	messageType MessageType
+	url         string
+	serviceUrl  string
+	cache       db.CacheRepositoryInterface
 }
 
 const urlTelegram string = "https://api.telegram.org"
 
 func NewTextService() *Telegram {
-	t := &Telegram{
-		Type: Text,
-	}
-	t.Init()
-	return t
+	return NewTextServiceWithUrl(urlTelegram)
 }
 
 func NewImageService() *Telegram {
+	return NewImageServiceWithUrl(urlTelegram)
+}
+
+func NewTextServiceWithUrl(url string) *Telegram {
 	t := &Telegram{
-		Type: Image,
+		messageType: Text,
+		url:         url,
 	}
-	t.Init()
+	t.init()
 	return t
 }
 
-func (t *Telegram) Init() {
+func NewImageServiceWithUrl(url string) *Telegram {
+	t := &Telegram{
+		messageType: Image,
+		url:         url,
+	}
+	t.init()
+	return t
+}
+
+func (t *Telegram) init() {
 	var err error
-	t.serviceUrl = t.GetTelegramUrl()
-	t.Cache, err = db.NewCacheRepository()
+	t.serviceUrl = t.getTelegramUrl()
+	t.cache, err = db.NewCacheRepository()
 	if err != nil {
 		log.Fatalf("Error creating cache repository: %v", err)
 	}
 }
 
-func (t *Telegram) GetTelegramUrl() string {
-	switch t.Type {
+func (t *Telegram) GetCache() db.CacheRepositoryInterface {
+	return t.cache
+}
+
+func (t *Telegram) getTelegramUrl() string {
+	switch t.messageType {
 	case Text:
-		return fmt.Sprintf("%s/%s", urlTelegram, config.Store.TelegramBotTextToken)
+		return fmt.Sprintf("%s/%s", t.url, config.Store.TelegramBotTextToken)
 	case Image:
-		return fmt.Sprintf("%s/%s", urlTelegram, config.Store.TelegramBotImageToken)
+		return fmt.Sprintf("%s/%s", t.url, config.Store.TelegramBotImageToken)
 	}
 	return ""
 }
@@ -194,6 +220,5 @@ func (t *Telegram) SendPhoto(imgUrl string, chatId string) error {
 	if rsp.StatusCode != http.StatusOK {
 		fmt.Printf("Request failed with response code: %d\n", rsp.StatusCode)
 	}
-	fmt.Println("SendPhoto - 9")
 	return nil
 }

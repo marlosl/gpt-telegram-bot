@@ -1,8 +1,8 @@
 package ssm
 
 import (
-    "fmt"
-    
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -24,7 +24,7 @@ func Get(name string) string {
 	)
 
 	if err != nil {
-	    fmt.Printf("Error getting SSM value: %v\n", err)
+		fmt.Printf("Error getting SSM value: %v\n", err)
 		return ""
 	}
 

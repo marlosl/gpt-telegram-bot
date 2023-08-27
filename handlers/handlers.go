@@ -21,9 +21,9 @@ type Chat struct {
 }
 
 var (
-	chatGPT         *chatgpt.ChatGPT
-	sqsClient       *sqs.SQSClient
-	telegramService *telegram.Telegram
+	chatGPT         chatgpt.ChatGPTInterface
+	sqsClient       sqs.SQSClientInterface
+	telegramService telegram.TelegramInterface
 )
 
 func init() {
@@ -80,7 +80,7 @@ func handleCommandChatTelegram(req events.APIGatewayV2HTTPRequest) (events.APIGa
 	updateId := fmt.Sprintf("%d", msg.UpdateId)
 	fmt.Printf("Validating if UpdateId exists: %s\n", updateId)
 
-	if telegramService.Cache.ItemExists(updateId) {
+	if telegramService.GetCache().ItemExists(updateId) {
 		fmt.Println("UpdateId already exists")
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusOK,
@@ -88,7 +88,7 @@ func handleCommandChatTelegram(req events.APIGatewayV2HTTPRequest) (events.APIGa
 	}
 
 	fmt.Println("UpdateId does not exist, saving it")
-	telegramService.Cache.SaveItem(&updateId)
+	telegramService.GetCache().SaveItem(&updateId)
 
 	command := telegram.GetCommand(&msg.Message.Text)
 	fmt.Printf("Command: %s\n", command)
@@ -198,7 +198,7 @@ func handleGenerateImageToTelegram(
 	}, nil
 }
 
-func sendPhoto(t *telegram.Telegram, i int, url string, chatId string) {
+func sendPhoto(t telegram.TelegramInterface, i int, url string, chatId string) {
 	fmt.Printf("Sending image %d: %s\n", i, url)
 	message := &telegram.ImageMessage{
 		ChatId:   chatId,

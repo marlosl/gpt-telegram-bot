@@ -11,6 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
+type SQSClientInterface interface {
+	SendMsg(message interface{}) error
+}
+
 type SQSClient struct {
 	QueueURL *string
 	Session  *session.Session

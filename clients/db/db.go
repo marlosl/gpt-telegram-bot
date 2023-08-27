@@ -13,6 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
+type CacheRepositoryInterface interface {
+	SaveItem(item *string) error
+	ItemExists(item string) bool
+	GetItem(item string) (*string, error)
+	DeleteItem(item string) error
+}
+
 type DBClient struct {
 	TableName *string
 	Session   *session.Session

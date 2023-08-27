@@ -11,6 +11,17 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+type ChatGPTInterface interface {
+	InitApi()
+	CreateRequest() *resty.Request
+	Talk(message string) (*ChatResponse, error)
+	Edit(instruction, message string) (*ChatResponse, error)
+	CreateChatRequest(message string) ChatRequest
+	CreateEditRequest(instruction, message string) EditRequest
+	CreateImage(message string) (*CreateImageResponse, error)
+	CreateImageRequest(message string) CreateImageRequest
+}
+
 type ChatGPT struct {
 	ApiKey         string
 	GptModel       string
