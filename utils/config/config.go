@@ -58,3 +58,11 @@ func NewConfig(t ConfigType) *Config {
 	}
 	return Store
 }
+
+func NewSSMConfig() *Config {
+  return NewConfig(SSM)
+}
+
+func NewFileConfig() *Config {
+  return NewConfig(File)
+}

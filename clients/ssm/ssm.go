@@ -8,15 +8,28 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 )
 
-var sess *session.Session
+type SSMClientInterface interface {
+  Get(name string) string
+}
 
-func Get(name string) string {
-	if sess == nil {
-		sess = session.New()
-	}
-	svc := ssm.New(sess)
+type SSMClient struct {
+  sess *session.Session
+  svc *ssm.SSM
+}
 
-	output, err := svc.GetParameter(
+func NewSSMClient() *SSMClient {
+  s := new(SSMClient)
+  s.init()
+  return s
+}
+
+func (s *SSMClient) init() {
+  t.sess = session.New()
+  t.svc = ssm.New(sess)
+}
+
+func (s *SSMClient) Get(name string) string {
+	output, err := s.svc.GetParameter(
 		&ssm.GetParameterInput{
 			Name:           aws.String(name),
 			WithDecryption: aws.Bool(true),
