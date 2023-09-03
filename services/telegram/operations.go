@@ -22,6 +22,8 @@ const (
 	Image MessageType = 2
 )
 
+const urlTelegram string = "https://api.telegram.org"
+
 type TelegramInterface interface {
 	SendMessage(message string, chatId string, isHtml bool)
 	SendRepliedMessage(message string, reply string)
@@ -38,75 +40,86 @@ type Telegram struct {
 	url         string
 	serviceUrl  string
 	cache       db.CacheRepositoryInterface
+	config      config.ConfigInterface
 }
 
-const urlTelegram string = "https://api.telegram.org"
-
-func NewTextService() *Telegram {
-	return NewTextServiceWithUrl(urlTelegram)
+func newTextService(config config.ConfigInterface) *Telegram {
+	return newTextServiceWithUrl(urlTelegram, config)
 }
 
-func NewImageService() *Telegram {
-	return NewImageServiceWithUrl(urlTelegram)
+func newImageService(config config.ConfigInterface) *Telegram {
+	return newImageServiceWithUrl(urlTelegram, config)
 }
 
-func NewTextServiceWithUrl(url string) *Telegram {
+func newTextServiceWithUrl(url string, config config.ConfigInterface) *Telegram {
 	t := &Telegram{
 		messageType: Text,
 		url:         url,
+		config:      config,
 	}
 	t.init()
 	return t
 }
 
-func NewImageServiceWithUrl(url string) *Telegram {
+func newImageServiceWithUrl(url string, config config.ConfigInterface) *Telegram {
 	t := &Telegram{
 		messageType: Image,
 		url:         url,
+		config:      config,
 	}
 	t.init()
 	return t
 }
 
 func (t *Telegram) init() {
-	var err error
 	t.serviceUrl = t.getTelegramUrl()
-	t.cache, err = db.NewCacheRepository()
-	if err != nil {
-		log.Fatalf("Error creating cache repository: %v", err)
-	}
 }
 
 func (t *Telegram) GetCache() db.CacheRepositoryInterface {
+	if t.cache == nil {
+		var err error
+		if t.cache, err = db.NewCacheRepository(); err != nil {
+			log.Fatalf("Error creating cache repository: %v", err)
+		}
+	}
 	return t.cache
 }
 
 func (t *Telegram) getTelegramUrl() string {
+	utils.IfThen(t.config == nil, "Config is nil", "")
 	switch t.messageType {
 	case Text:
-		return fmt.Sprintf("%s/%s", t.url, config.Store.TelegramBotTextToken)
+		return utils.IfThen(
+			t.config.GetTelegramBotTextToken() == "",
+			t.url,
+			fmt.Sprintf("%s/%s", t.url, t.config.GetTelegramBotTextToken()),
+		)
 	case Image:
-		return fmt.Sprintf("%s/%s", t.url, config.Store.TelegramBotImageToken)
+		return utils.IfThen(
+			t.config.GetTelegramBotImageToken() == "",
+			t.url,
+			fmt.Sprintf("%s/%s", t.url, t.config.GetTelegramBotImageToken()),
+		)
 	}
 	return ""
 }
 
-func (t *Telegram) SendMessage(message string, chatId string, isHtml bool) {
+func (t *Telegram) SendMessage(message string, chatId string, isHtml bool) (string, error) {
 	params := url.Values{}
 	params.Add("chat_id", chatId)
 	if isHtml {
 		params.Add("parse_mode", "html")
 	}
-	t.SendTelegramMessage(message, params)
+	return t.SendTelegramMessage(message, params)
 }
 
-func (t *Telegram) SendRepliedMessage(message string, reply string) {
+func (t *Telegram) SendRepliedMessage(message string, reply string) (string, error) {
 	params := url.Values{}
 	params.Add("reply_markup", reply)
-	t.SendTelegramMessage(message, params)
+	return t.SendTelegramMessage(message, params)
 }
 
-func (t *Telegram) SendTelegramMessage(message string, paramValues url.Values) {
+func (t *Telegram) SendTelegramMessage(message string, paramValues url.Values) (string, error) {
 	params := url.Values{}
 	if (len(paramValues)) > 0 {
 		params = paramValues
@@ -122,9 +135,11 @@ func (t *Telegram) SendTelegramMessage(message string, paramValues url.Values) {
 
 	fmt.Println("err", err)
 	fmt.Println("response", response)
+
+	return utils.IfThen(response != nil, response.Status, ""), err
 }
 
-func (t *Telegram) SendTelegramCallbackQueryResponse(callbackQueryId string) {
+func (t *Telegram) SendTelegramCallbackQueryResponse(callbackQueryId string) (string, error) {
 	params := url.Values{}
 
 	params.Add("callback_query_id", callbackQueryId)
@@ -137,9 +152,11 @@ func (t *Telegram) SendTelegramCallbackQueryResponse(callbackQueryId string) {
 
 	fmt.Println("err", err)
 	fmt.Println("response", response)
+
+	return utils.IfThen(response != nil, response.Status, ""), err
 }
 
-func (t *Telegram) SetWebhook(webhookUrl string, token string) {
+func (t *Telegram) SetWebhook(webhookUrl string, token string) (string, error) {
 	params := url.Values{}
 
 	params.Add("url", webhookUrl)
@@ -153,9 +170,11 @@ func (t *Telegram) SetWebhook(webhookUrl string, token string) {
 
 	fmt.Println("err", err)
 	fmt.Println("response", response)
+
+	return utils.IfThen(response != nil, response.Status, ""), err
 }
 
-func (t *Telegram) SendPhotoGet(imgUrl string, chatId string) error {
+func (t *Telegram) SendPhotoGet(imgUrl string, chatId string) (string, error) {
 	params := url.Values{}
 	params.Add("chat_id", chatId)
 	params.Add("photo", imgUrl)
@@ -168,7 +187,7 @@ func (t *Telegram) SendPhotoGet(imgUrl string, chatId string) error {
 
 	fmt.Println("err", err)
 	fmt.Println("response", response)
-	return err
+	return utils.IfThen(response != nil, response.Status, ""), err
 }
 
 func (t *Telegram) SendPhoto(imgUrl string, chatId string) error {

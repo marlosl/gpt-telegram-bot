@@ -11,7 +11,6 @@ import (
 	"github.com/marlosl/gpt-telegram-bot/consts"
 	"github.com/marlosl/gpt-telegram-bot/services/chatgpt"
 	"github.com/marlosl/gpt-telegram-bot/services/telegram"
-	"github.com/marlosl/gpt-telegram-bot/utils/config"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -24,10 +23,10 @@ var (
 	chatGPT         chatgpt.ChatGPTInterface
 	sqsClient       sqs.SQSClientInterface
 	telegramService telegram.TelegramInterface
+	cfg             config.ConfigInterface
 )
 
 func init() {
-	config.NewConfig(config.SSM)
 	if chatGPT == nil {
 		chatGPT = chatgpt.NewChatGPT()
 	}

@@ -11,8 +11,9 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+const urlChatGPT string = "https://api.openai.com"
+
 type ChatGPTInterface interface {
-	InitApi()
 	CreateRequest() *resty.Request
 	Talk(message string) (*ChatResponse, error)
 	Edit(instruction, message string) (*ChatResponse, error)
@@ -23,27 +24,41 @@ type ChatGPTInterface interface {
 }
 
 type ChatGPT struct {
-	ApiKey         string
-	GptModel       string
-	ChatUrl        string
-	CreateImageUrl string
-	EditUrl        string
+	apiKey         string
+	gptModel       string
+	url            string
+	chatUrl        string
+	createImageUrl string
+	editUrl        string
+	config         config.ConfigInterface
 }
 
-func (c *ChatGPT) InitApi() {
-	config.NewConfig(config.SSM)
-	c.ApiKey = config.Store.GptApiKey
-	c.GptModel = config.Store.GptModel
-	c.ChatUrl = "https://api.openai.com/v1/chat/completions"
-	c.CreateImageUrl = "https://api.openai.com/v1/images/generations"
-	c.EditUrl = "https://api.openai.com/v1/edits"
+func newChatGPT(config config.ConfigInterface) *ChatGPT {
+	return newChatGPTWithUrl(urlChatGPT, config)
+}
+
+func newChatGPTWithUrl(url string, config config.ConfigInterface) *ChatGPT {
+	c := &ChatGPT{
+		url:    url,
+		config: config,
+	}
+	c.initApi()
+	return c
+}
+
+func (c *ChatGPT) initApi() {
+	c.apiKey = c.config.GetGptApiKey()
+	c.gptModel = c.config.GetGptModel()
+	c.chatUrl = fmt.Sprintf("%s/%s", c.url, "v1/chat/completions")
+	c.createImageUrl = fmt.Sprintf("%s/%s", c.url, "v1/images/generations")
+	c.editUrl = fmt.Sprintf("%s/%s", c.url, "v1/edits")
 }
 
 func (c *ChatGPT) CreateRequest() *resty.Request {
 	client := resty.New()
 	client.SetTimeout(5 * time.Minute)
 	return client.R().
-		SetAuthToken(c.ApiKey).
+		SetAuthToken(c.apiKey).
 		SetHeader("accept", "*/*").
 		SetHeader("accept-encoding", "gzip, deflate, br").
 		SetHeader("accept-language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7").
@@ -68,7 +83,7 @@ func (c *ChatGPT) Talk(message string) (*ChatResponse, error) {
 	resp, err := c.CreateRequest().
 		SetResult(ChatResponse{}).
 		SetBody(c.CreateChatRequest(message)).
-		Post(c.ChatUrl)
+		Post(c.chatUrl)
 
 	utils.PrintRestyDebug(resp, err)
 	if err != nil || !c.isSuccess(resp) {
@@ -82,7 +97,7 @@ func (c *ChatGPT) Edit(instruction, message string) (*ChatResponse, error) {
 	resp, err := c.CreateRequest().
 		SetResult(ChatResponse{}).
 		SetBody(c.CreateEditRequest(instruction, message)).
-		Post(c.ChatUrl)
+		Post(c.chatUrl)
 
 	utils.PrintRestyDebug(resp, err)
 	if err != nil || !c.isSuccess(resp) {
@@ -106,7 +121,7 @@ func (c *ChatGPT) CreateChatRequest(message string) ChatRequest {
 
 	if len(stop) > 0 {
 		req = ChatRequest{
-			Model: c.GptModel,
+			Model: c.gptModel,
 			Messages: []ChatMessage{
 				{
 					Role:    "user",
@@ -117,7 +132,7 @@ func (c *ChatGPT) CreateChatRequest(message string) ChatRequest {
 		}
 	} else {
 		req = ChatRequest{
-			Model: c.GptModel,
+			Model: c.gptModel,
 			Messages: []ChatMessage{
 				{
 					Role:    "user",
@@ -143,7 +158,7 @@ func (c *ChatGPT) CreateImage(message string) (*CreateImageResponse, error) {
 	resp, err := c.CreateRequest().
 		SetResult(CreateImageResponse{}).
 		SetBody(c.CreateImageRequest(message)).
-		Post(c.CreateImageUrl)
+		Post(c.createImageUrl)
 
 	utils.PrintRestyDebug(resp, err)
 	if err != nil || !c.isSuccess(resp) {
@@ -159,10 +174,4 @@ func (c *ChatGPT) CreateImageRequest(message string) CreateImageRequest {
 		N:      2,
 		Size:   "1024x1024",
 	}
-}
-
-func NewChatGPT() *ChatGPT {
-	c := &ChatGPT{}
-	c.InitApi()
-	return c
 }

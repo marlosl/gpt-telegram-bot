@@ -9,23 +9,23 @@ import (
 )
 
 type SSMClientInterface interface {
-  Get(name string) string
+	Get(name string) string
 }
 
 type SSMClient struct {
-  sess *session.Session
-  svc *ssm.SSM
+	sess *session.Session
+	svc  *ssm.SSM
 }
 
 func NewSSMClient() *SSMClient {
-  s := new(SSMClient)
-  s.init()
-  return s
+	s := new(SSMClient)
+	s.init()
+	return s
 }
 
 func (s *SSMClient) init() {
-  t.sess = session.New()
-  t.svc = ssm.New(sess)
+	s.sess, _ = session.NewSession()
+	s.svc = ssm.New(s.sess)
 }
 
 func (s *SSMClient) Get(name string) string {

@@ -45,7 +45,7 @@ func InitConfig() {
 	}
 
 	InitEnvVars()
-	config.NewConfig(config.File)
+	config.NewFileConfig()
 }
 
 func InitEnvVars() {
@@ -104,6 +104,13 @@ func DownloadFile(filepath string, url string) error {
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	return err
+}
+
+func IfThen[T any](condition bool, a T, b T) T {
+	if condition {
+		return a
+	}
+	return b
 }
 
 func PrintRestyDebug(resp *resty.Response, err error) {

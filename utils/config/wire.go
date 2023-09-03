@@ -1,9 +1,16 @@
 //go:build wireinject
 // +build wireinject
+
 package config
 
-import "github.com/google/wire"
+import (
+	"github.com/marlosl/gpt-telegram-bot/clients/ssm"
 
-var Wired = wire.NewSet(
+	"github.com/google/wire"
+)
+
+var ConfigSet = wire.NewSet(
+	ssm.SSMSet,
 	NewSSMConfig,
+	wire.Bind(new(ConfigInterface), new(*Config))
 )

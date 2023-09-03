@@ -6,13 +6,12 @@ require (
 	github.com/aws/aws-lambda-go v1.38.0
 	github.com/aws/aws-sdk-go v1.44.219
 	github.com/go-resty/resty/v2 v2.7.0
-	github.com/golang/mock v1.6.0
+	github.com/google/wire v0.5.0
 	github.com/pulumi/pulumi-aws/sdk/v5 v5.30.1
 	github.com/pulumi/pulumi/sdk/v3 v3.57.1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
-	go.uber.org/mock v0.2.0
 )
 
 require (
@@ -38,7 +37,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/wire v0.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -71,6 +69,7 @@ require (
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/tweekmonster/luser v0.0.0-20161003172636-3fa38070dbd7 // indirect
