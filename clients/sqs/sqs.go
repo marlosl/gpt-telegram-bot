@@ -20,7 +20,7 @@ type SQSClient struct {
 	Session  *session.Session
 }
 
-func NewSQSClient(queue *string) (*SQSClient, error) {
+func newSQSClient(queue *string) (*SQSClient, error) {
 	sess, err := session.NewSession()
 	if err != nil {
 		fmt.Println("Got an error creating a new session:")

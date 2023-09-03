@@ -11,6 +11,7 @@ import (
 	"github.com/marlosl/gpt-telegram-bot/consts"
 	"github.com/marlosl/gpt-telegram-bot/services/chatgpt"
 	"github.com/marlosl/gpt-telegram-bot/services/telegram"
+  "github.com/marlosl/gpt-telegram-bot/utils/config"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -19,46 +20,52 @@ type Chat struct {
 	Message string `json:"message"`
 }
 
-var (
+type Handler struct {
 	chatGPT         chatgpt.ChatGPTInterface
 	sqsClient       sqs.SQSClientInterface
 	telegramService telegram.TelegramInterface
 	cfg             config.ConfigInterface
-)
+}
 
-func init() {
-	if chatGPT == nil {
-		chatGPT = chatgpt.NewChatGPT()
+func NewHandler() *Handler {
+  h := new(Handler)
+  h.init()
+  return h
+}
+
+func (h *Handler) init() {
+	if h.chatGPT == nil {
+		h.chatGPT = chatgpt.NewChatGPT()
 	}
 
-	if sqsClient == nil {
+	if h.sqsClient == nil {
 		queue := os.Getenv(consts.SendImageQueue)
-		sqsClient, _ = sqs.NewSQSClient(&queue)
+		h.sqsClient, _ = sqs.NewSQSClient(&queue)
 	}
 
-	if telegramService == nil {
-		telegramService = telegram.NewTextService()
+	if h.telegramService == nil {
+		h.telegramService = telegram.NewTextService()
 	}
 }
 
-func handlePingPong(req events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+func (h *Handler) handlePingPong(req events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusOK,
 		Body:       "Pong!",
 	}, nil
 }
 
-func handleCommandChatTelegram(req events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+func (h *Handler) handleCommandChatTelegram(req events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	var msg telegram.WebhookMessage
 
-	if req.Headers[consts.TelegramWebhookTokenHeader] != config.Store.TelegramWebhookToken {
+	if req.Headers[consts.TelegramWebhookTokenHeader] != h.cfg.TelegramWebhookToken() {
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusUnauthorized,
 			Body:       "Unauthorized",
 		}, nil
 	}
 
-	err := checkServices()
+	err := h.checkServices()
 	if err != nil {
 		fmt.Println(err)
 		return events.APIGatewayProxyResponse{
@@ -79,7 +86,7 @@ func handleCommandChatTelegram(req events.APIGatewayV2HTTPRequest) (events.APIGa
 	updateId := fmt.Sprintf("%d", msg.UpdateId)
 	fmt.Printf("Validating if UpdateId exists: %s\n", updateId)
 
-	if telegramService.GetCache().ItemExists(updateId) {
+	if h.telegramService.GetCache().ItemExists(updateId) {
 		fmt.Println("UpdateId already exists")
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusOK,
@@ -87,19 +94,19 @@ func handleCommandChatTelegram(req events.APIGatewayV2HTTPRequest) (events.APIGa
 	}
 
 	fmt.Println("UpdateId does not exist, saving it")
-	telegramService.GetCache().SaveItem(&updateId)
+	h.telegramService.GetCache().SaveItem(&updateId)
 
 	command := telegram.GetCommand(&msg.Message.Text)
 	fmt.Printf("Command: %s\n", command)
 
 	switch command {
 	case telegram.CreateImageCommand:
-		return handleGenerateImageToTelegram(req, msg, command)
+		return h.handleGenerateImageToTelegram(req, msg, command)
 	}
-	return handleTalkToChatTelegram(req, msg, command)
+	return h.handleTalkToChatTelegram(req, msg, command)
 }
 
-func handleTalkToChatTelegram(
+func (h *Handler) handleTalkToChatTelegram(
 	req events.APIGatewayV2HTTPRequest,
 	msg telegram.WebhookMessage,
 	cmd telegram.Command,
@@ -117,10 +124,10 @@ func handleTalkToChatTelegram(
 	case telegram.EditCommand:
 		fmt.Println("handleTalkToChatTelegram - EditCommand")
 		text, instruction := telegram.ParseMessage(cmd, &msg.Message.Text)
-		response, err = chatGPT.Edit(*instruction, *text)
+		response, err = h.chatGPT.Edit(*instruction, *text)
 	case telegram.None:
 		fmt.Println("handleTalkToChatTelegram - None")
-		response, err = chatGPT.Talk(msg.Message.Text)
+		response, err = h.chatGPT.Talk(msg.Message.Text)
 	}
 
 	if err != nil {
@@ -136,14 +143,14 @@ func handleTalkToChatTelegram(
 	}
 
 	if len(response.Choices) == 0 {
-		telegramService.SendMessage("No Chat GPT response", chatId, false)
+		h.telegramService.SendMessage("No Chat GPT response", chatId, false)
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusNotFound,
 		}, nil
 	}
 
 	for _, choice := range response.Choices {
-		telegramService.SendMessage(choice.Message.Content, chatId, true)
+		h.telegramService.SendMessage(choice.Message.Content, chatId, true)
 	}
 
 	return events.APIGatewayProxyResponse{
@@ -151,7 +158,7 @@ func handleTalkToChatTelegram(
 	}, nil
 }
 
-func handleGenerateImageToTelegram(
+func (h *Handler) handleGenerateImageToTelegram(
 	req events.APIGatewayV2HTTPRequest,
 	msg telegram.WebhookMessage,
 	cmd telegram.Command,
@@ -162,7 +169,7 @@ func handleGenerateImageToTelegram(
 	chatId := ""
 	text, _ := telegram.ParseMessage(cmd, &msg.Message.Text)
 
-	response, err := chatGPT.CreateImage(*text)
+	response, err := h.chatGPT.CreateImage(*text)
 	if err != nil {
 		fmt.Println(err)
 		return events.APIGatewayProxyResponse{
@@ -176,19 +183,19 @@ func handleGenerateImageToTelegram(
 	}
 
 	if response == nil || len(response.Data) == 0 {
-		telegramService.SendMessage("No images were created", chatId, false)
+		h.telegramService.SendMessage("No images were created", chatId, false)
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusNotFound,
 		}, nil
 	}
 
-	telegramService.SendMessage(fmt.Sprintf("Number of generated images: %d", len(response.Data)), chatId, true)
+	h.telegramService.SendMessage(fmt.Sprintf("Number of generated images: %d", len(response.Data)), chatId, true)
 
 	for i, photo := range response.Data {
-		if config.Store.SendImageByUrl {
-			telegramService.SendMessage(fmt.Sprintf("Image url: %s", photo.Url), chatId, true)
+		if h.cfg.SendImageByUrl() {
+			h.telegramService.SendMessage(fmt.Sprintf("Image url: %s", photo.Url), chatId, true)
 		} else {
-			sendPhoto(telegramService, i, photo.Url, chatId)
+			h.sendPhoto(h.telegramService, i, photo.Url, chatId)
 		}
 	}
 
@@ -197,20 +204,20 @@ func handleGenerateImageToTelegram(
 	}, nil
 }
 
-func sendPhoto(t telegram.TelegramInterface, i int, url string, chatId string) {
+func (h *Handler) sendPhoto(t telegram.TelegramInterface, i int, url string, chatId string) {
 	fmt.Printf("Sending image %d: %s\n", i, url)
 	message := &telegram.ImageMessage{
 		ChatId:   chatId,
 		ImageUrl: url,
 	}
 
-	err := sqsClient.SendMsg(message)
+	err := h.sqsClient.SendMsg(message)
 	if err != nil {
 		t.SendMessage(fmt.Sprintf("Error while sending image: %v\n", err), chatId, true)
 	}
 }
 
-func handleTalkToChatGPT(req events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+func (h *Handler) handleTalkToChatGPT(req events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	var chat Chat
 	err := json.Unmarshal([]byte(req.Body), &chat)
 	if err != nil {
@@ -221,7 +228,7 @@ func handleTalkToChatGPT(req events.APIGatewayV2HTTPRequest) (events.APIGatewayP
 		}, nil
 	}
 
-	response, err := chatGPT.Talk(chat.Message)
+	response, err := h.chatGPT.Talk(chat.Message)
 	if err != nil {
 		fmt.Println(err)
 		return events.APIGatewayProxyResponse{
@@ -243,16 +250,16 @@ func handleTalkToChatGPT(req events.APIGatewayV2HTTPRequest) (events.APIGatewayP
 	}, nil
 }
 
-func checkServices() error {
-	if chatGPT == nil {
+func (h *Handler) checkServices() error {
+	if h.chatGPT == nil {
 		return errors.New("chatGPT is not initialized")
 	}
 
-	if sqsClient == nil {
+	if h.sqsClient == nil {
 		return errors.New("sqsClient is not initialized")
 	}
 
-	if telegramService == nil {
+	if h.telegramService == nil {
 		return errors.New("telegramService is not initialized")
 	}
 

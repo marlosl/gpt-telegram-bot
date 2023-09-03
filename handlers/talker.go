@@ -11,18 +11,18 @@ import (
 
 func Router(req events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
 	fmt.Printf("Request: %s", utils.SPrintJson(req))
+  handler := NewHandler()
 	if req.RequestContext.HTTP.Method == "GET" {
-
 		if req.RawPath == "/ping" {
-			return handlePingPong(req)
+			return handler.handlePingPong(req)
 		}
 	}
 	if req.RequestContext.HTTP.Method == "POST" {
 		if req.RawPath == "/gpt" {
-			return handleTalkToChatGPT(req)
+			return handler.handleTalkToChatGPT(req)
 		}
 		if req.RawPath == "/telegram-bot" {
-			return handleCommandChatTelegram(req)
+			return handler.handleCommandChatTelegram(req)
 		}
 	}
 
