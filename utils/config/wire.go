@@ -12,5 +12,10 @@ import (
 var ConfigSet = wire.NewSet(
 	ssm.SSMSet,
 	NewSSMConfig,
-	wire.Bind(new(ConfigInterface), new(*Config))
+	wire.Bind(new(ConfigInterface), new(*Config)),
 )
+
+func InitConfig() *Config {
+	wire.Build(ConfigSet)
+	return &Config{}
+}

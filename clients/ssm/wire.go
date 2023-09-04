@@ -7,5 +7,10 @@ import "github.com/google/wire"
 
 var SSMSet = wire.NewSet(
 	NewSSMClient,
-	wire.Bind(new(SSMClientInterface), new(*SSMClient))
+	wire.Bind(new(SSMClientInterface), new(*SSMClient)),
 )
+
+func InitSSMClient() *SSMClient {
+	wire.Build(SSMSet)
+	return &SSMClient{}
+}

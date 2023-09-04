@@ -12,10 +12,10 @@ import (
 var ChatGPTSet = wire.NewSet(
 	config.ConfigSet,
 	newChatGPT,
-	wire.Bind(new(ChatGPTInterface), new(*ChatGPT))
+	wire.Bind(new(ChatGPTInterface), new(*ChatGPT)),
 )
 
 func NewChatGPT() *ChatGPT {
 	wire.Build(ChatGPTSet)
-	return ChatGPT{}
+	return &ChatGPT{}
 }
