@@ -19,12 +19,12 @@ var TelegramImageSet = wire.NewSet(
 	newImageService,
 )
 
-func NewTextService() *Telegram {
+func NewTextService() (*Telegram, error) {
 	wire.Build(TelegramTextSet)
-	return Telegram{}
+	return &Telegram{}, nil
 }
 
-func NewImageService() *Telegram {
+func NewImageService() (*Telegram, error) {
 	wire.Build(TelegramImageSet)
-	return Telegram{}
+	return &Telegram{}, nil
 }

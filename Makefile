@@ -13,8 +13,15 @@ BINARY_NAME=main
 
 SRC_CLI=$(shell find ./cmd/cli -name *.go)
 
+install-dep:
+	$(GOMOD) tidy
+	@$(GOINST) github.com/google/wire/cmd/wire@latest
+
+wire: install-dep
+	~/go/bin/wire github.com/marlosl/gpt-telegram-bot/services/telegram
+
 # Build CLI
-build-cli: $(SRC_CLI)
+build-cli: install-dep $(SRC_CLI)
 	@$(GOBUILD) -o ./build/$(BINARY_NAME) ./cmd/cli
 	@echo "📦 Build CLI Done"
 
